@@ -42,21 +42,48 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;margin:18px 8px;lin
     box.textContent = message;
     result.appendChild(box);
   }
-  function addDetails(record) {
-    const dl = document.createElement("dl");
-    for (const [label, value] of [
-      ["Nomor sertifikat", record.nomor_sertifikat],
-      ["Nama peserta", record.nama_peserta],
-      ["Nama ujian", record.nama_ujian],
-      ["Tanggal selesai", record.tanggal_selesai],
-      ["Status", record.status]
-    ]) {
-      const dt = document.createElement("dt"), dd = document.createElement("dd");
-      dt.textContent = label; dd.textContent = value == null ? "-" : String(value);
-      dl.append(dt, dd);
-    }
-    result.appendChild(dl);
+  
+function addDetails(record) {
+  const dl = document.createElement("dl");
+
+  function formatTanggal(value) {
+    if (!value) return "-";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+
+    return new Intl.DateTimeFormat("id-ID", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "Asia/Makassar"
+    }).format(date) + " WITA";
   }
+
+  const details = [
+    ["Nomor sertifikat", record.nomor_sertifikat],
+    ["Nama lengkap peserta", record.nama_peserta],
+    ["Mata pelajaran", record.mata_pelajaran],
+    ["Judul ujian", record.judul_ujian],
+    ["Materi ujian", record.materi_ujian],
+    ["Tanggal selesai", formatTanggal(record.tanggal_selesai)],
+    ["Status", record.status === "selesai" ? "Ujian selesai" : record.status]
+  ];
+
+  for (const [label, value] of details) {
+    const dt = document.createElement("dt");
+    const dd = document.createElement("dd");
+
+    dt.textContent = label;
+    dd.textContent =
+      value == null || String(value).trim() === ""
+        ? "-"
+        : String(value);
+
+    dl.append(dt, dd);
+  }
+
+  result.appendChild(dl);
+}
   async function verify(number) {
     if (SUPABASE_PUBLIC_KEY.startsWith("GANTI_DENGAN_")) {
       showStatus("Pengaturan belum selesai: administrator perlu memasukkan publishable key atau anon key proyek produksi ke halaman ini.", "pending");
