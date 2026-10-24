@@ -1635,11 +1635,17 @@ Kunci: B</pre>
           if(!supabaseClient||!adminAuthSession?.access_token) throw new Error('Sesi administrator tidak tersedia. Silakan login kembali.');
           const examId=document.getElementById('report-exam-select')?.value;
           if(!examId) throw new Error('Pilih ujian pada menu Laporan Nilai terlebih dahulu.');
-          if(!r?.nisn) throw new Error('NISN tidak tersedia pada data laporan peserta.');
-          const {data:siswa,error:siswaError}=await supabaseClient.from('cbt_siswa').select('id').eq('nisn',String(r.nisn)).maybeSingle();
-          if(siswaError) throw new Error('Tidak dapat membaca data peserta. Periksa izin akses tabel cbt_siswa: '+siswaError.message);
-          if(!siswa?.id) throw new Error('Peserta tidak ditemukan pada tabel cbt_siswa.');
-          const {data:pengerjaan,error:pengerjaanError}=await supabaseClient.from('cbt_pengerjaan').select('nomor_sertifikat,selesai_at,status').eq('siswa_id',siswa.id).eq('ujian_id',examId).eq('status','selesai').not('nomor_sertifikat','is',null).maybeSingle();
+          const nisn=String(r?.nisn??'').trim();
+          // Utamakan ID siswa bila memang disertakan oleh endpoint laporan.
+          // Jika tidak ada, cari berdasarkan NISN yang sudah dibersihkan dari spasi.
+          let siswaId=String(r?.siswa_id??r?.id_siswa??'').trim();
+          if(!siswaId && nisn){
+            const {data:siswa,error:siswaError}=await supabaseClient.from('cbt_siswa').select('id').eq('nisn',nisn).maybeSingle();
+            if(siswaError) throw new Error('Tidak dapat membaca data peserta. Periksa izin akses tabel cbt_siswa: '+siswaError.message);
+            siswaId=siswa?.id?String(siswa.id):'';
+          }
+          if(!siswaId) throw new Error('ID peserta tidak tersedia pada laporan dan pencarian NISN tidak menemukan peserta. Muat ulang laporan; jika masih gagal, endpoint laporan perlu menyertakan siswa_id.');
+          const {data:pengerjaan,error:pengerjaanError}=await supabaseClient.from('cbt_pengerjaan').select('nomor_sertifikat,selesai_at,status').eq('siswa_id',siswaId).eq('ujian_id',examId).eq('status','selesai').not('nomor_sertifikat','is',null).maybeSingle();
           if(pengerjaanError) throw new Error('Tidak dapat membaca nomor sertifikat. Periksa izin akses/RLS tabel cbt_pengerjaan: '+pengerjaanError.message);
           if(!pengerjaan?.nomor_sertifikat) throw new Error('Nomor sertifikat belum tersedia untuk peserta ini. Jangan menerbitkan QR dengan nomor buatan.');
           if(!pengerjaan.selesai_at) throw new Error('Data sertifikat belum memiliki tanggal penyelesaian.');
