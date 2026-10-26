@@ -231,7 +231,10 @@ async function saveQuizResultOnline(result) {
             <button type="button" data-admin-nav="overview" onclick="adminShowSection('overview')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-blue-600 text-white font-semibold text-left"><span>▦</span><span>Dashboard</span></button>
             <button type="button" data-admin-nav="teachers" onclick="adminShowSection('teachers')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>♙</span><span>Manajemen Guru</span></button>
             <button type="button" data-admin-nav="subjects" onclick="adminShowSection('subjects')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>▤</span><span>Mata Pelajaran</span></button>
+            <button type="button" data-admin-nav="students" onclick="adminShowSection('students')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>♙</span><span>Data Siswa</span></button>
             <button type="button" data-admin-nav="exams" onclick="adminShowSection('exams')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>☑</span><span>Manajemen Ujian</span></button>
+            <button type="button" data-admin-nav="participants" onclick="adminShowSection('participants')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>♙</span><span>Peserta Ujian</span></button>
+            <button type="button" data-admin-nav="monitoring" onclick="adminShowSection('monitoring')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>◷</span><span>Monitoring Ujian</span></button>
             <button type="button" data-admin-nav="reports" onclick="adminShowSection('reports')" class="admin-nav w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left"><span>▥</span><span>Laporan Nilai</span></button>
             <button type="button" onclick="handleAdminLogout()" class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-rose-300 hover:bg-rose-950/60 font-semibold text-left mt-5"><span>↪</span><span>Keluar</span></button>
           </nav>
@@ -247,6 +250,21 @@ async function saveQuizResultOnline(result) {
       </div>
       <div id="admin-panel-teachers" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4"><div class="flex flex-wrap items-center justify-between gap-3"><h3 class="text-xl font-extrabold">Daftar Guru dan Status Akun</h3><button onclick="adminRefreshData()" class="rounded-lg bg-slate-800 px-4 py-2 text-white font-bold">Muat Ulang Data</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">Nama / Email</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr></thead><tbody id="admin-teachers-table"><tr><td colspan="3" class="p-3">Belum dimuat.</td></tr></tbody></table></div></div>
       <div id="admin-panel-subjects" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4"><h3 class="text-xl font-extrabold">Daftar Mata Pelajaran dan Penugasan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">Kode / Mata Pelajaran</th><th class="p-3">Kelas / Fase</th><th class="p-3">Guru</th><th class="p-3">Penugasan</th></tr></thead><tbody id="admin-subjects-table"><tr><td colspan="4" class="p-3">Belum dimuat.</td></tr></tbody></table></div></div>
+      <div id="admin-panel-students" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-5">
+        <div><h3 class="text-xl font-extrabold">Data Siswa</h3><p class="text-sm text-slate-500 mt-1">Kelola identitas siswa sekolah. Data disimpan pada tabel <code>cbt_siswa</code>. Menu ini tidak membuat atau mengubah kata sandi/PIN siswa.</p></div>
+        <div id="admin-students-notice" class="hidden rounded-lg border p-3 text-sm" role="status"></div>
+        <form id="admin-student-form" onsubmit="adminSaveStudent(event)" class="grid md:grid-cols-2 lg:grid-cols-4 gap-3 border rounded-xl p-4 bg-slate-50">
+          <input id="student-edit-id" type="hidden">
+          <label class="text-sm font-semibold">NISN<input id="student-nisn" class="mt-1 w-full rounded-lg border p-3 bg-white" inputmode="numeric" maxlength="30" placeholder="Nomor NISN" required></label>
+          <label class="text-sm font-semibold">Nama lengkap<input id="student-name" class="mt-1 w-full rounded-lg border p-3 bg-white" maxlength="160" placeholder="Nama sesuai data sekolah" required></label>
+          <label class="text-sm font-semibold">Rombongan belajar<input id="student-class" class="mt-1 w-full rounded-lg border p-3 bg-white" maxlength="40" placeholder="Contoh: X.1 atau XII.3" required></label>
+          <div class="flex items-end gap-2"><button id="student-save-btn" class="flex-1 rounded-lg bg-blue-700 px-4 py-3 font-bold text-white" type="submit">Tambah Siswa</button><button class="rounded-lg border bg-white px-4 py-3 font-bold" type="button" onclick="adminResetStudentForm()">Batal</button></div>
+        </form>
+        <div class="flex flex-wrap items-center gap-2"><input id="students-search" class="min-w-48 flex-1 rounded-lg border p-3" placeholder="Cari NISN, nama, atau kelas..." oninput="adminRenderStudents()"><select id="students-class-filter" class="rounded-lg border p-3" onchange="adminRenderStudents()"><option value="">Semua kelas</option></select><button type="button" onclick="adminRefreshStudents()" class="rounded-lg bg-slate-800 px-4 py-3 font-bold text-white">Muat Ulang</button></div>
+        <div class="flex flex-wrap items-center justify-between gap-3"><div><h4 class="font-bold">Impor siswa dari CSV</h4><p class="text-xs text-slate-500">Header yang didukung: nisn,nama_lengkap,kelas. Simpan dari Excel sebagai CSV UTF-8. Impor hanya menambahkan siswa, tidak menghapus data.</p></div><label class="cursor-pointer rounded-lg bg-emerald-700 px-4 py-3 font-bold text-white">Pilih file CSV<input id="students-csv-file" type="file" accept=".csv,text/csv" class="hidden" onchange="adminImportStudentsCsv(event)"></label><button type="button" onclick="adminDownloadStudentTemplate()" class="rounded-lg border px-4 py-3 font-bold">Unduh Template</button></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div class="rounded-xl bg-slate-50 border p-3"><div class="text-xs text-slate-500">Jumlah siswa tampil</div><div id="students-count" class="text-2xl font-extrabold">0</div></div><div class="rounded-xl bg-slate-50 border p-3"><div class="text-xs text-slate-500">Siswa aktif</div><div id="students-active-count" class="text-2xl font-extrabold">0</div></div><div class="rounded-xl bg-slate-50 border p-3"><div class="text-xs text-slate-500">Jumlah kelas</div><div id="students-class-count" class="text-2xl font-extrabold">0</div></div><div class="rounded-xl bg-amber-50 border border-amber-200 p-3"><div class="text-xs text-amber-800">Catatan</div><div class="text-sm font-semibold text-amber-900">Pastikan akses database admin diizinkan oleh RLS.</div></div></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">No.</th><th class="p-3">NISN</th><th class="p-3">Nama lengkap</th><th class="p-3">Kelas</th><th class="p-3">Status</th><th class="p-3">Aksi</th></tr></thead><tbody id="admin-students-table"><tr><td colspan="6" class="p-3 text-slate-500">Klik Muat Ulang untuk mengambil data.</td></tr></tbody></table></div>
+      </div>
       <div id="admin-panel-exams" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4">
         <div><h3 class="text-xl font-extrabold">Tahap 2 — Manajemen Ujian</h3><p class="text-sm text-slate-500 mt-1">Buat ujian per mata pelajaran. Ujian baru otomatis berstatus Draft dan belum dapat diakses peserta.</p></div>
         <form id="admin-create-exam-form" onsubmit="adminCreateExam(event)" class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -263,6 +281,22 @@ async function saveQuizResultOnline(result) {
         <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">Penting: tahap ini baru mengelola metadata ujian. Jangan ubah status menjadi Terbit sebelum bank soal tersedia. Tahap berikutnya akan menambahkan pengelolaan soal per ujian.</p>
       </div>
       <p class="text-xs text-slate-500">Tahap 2 menambahkan pembuatan ujian, daftar ujian, dan perubahan status. Fungsi cbt-admin tetap tidak diubah.</p>
+      <div id="admin-panel-participants" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4">
+        <div><h3 class="text-xl font-extrabold">Peserta Ujian</h3><p class="text-sm text-slate-500 mt-1">Daftar peserta untuk ujian terpilih. Data dibaca dari laporan CBT; panel ini tidak membuat atau mengubah akun siswa.</p></div>
+        <div class="grid md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end"><label class="text-sm font-semibold">Pilih ujian<select id="participants-exam-select" class="mt-1 w-full rounded-lg border p-3"><option value="">Muat daftar ujian...</option></select></label><button type="button" onclick="adminLoadParticipants()" id="participants-load-btn" class="rounded-lg bg-blue-700 px-4 py-3 text-white font-bold">Muat Peserta</button></div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"><div class="rounded-xl bg-slate-50 border p-4"><div class="text-xs text-slate-500">Total peserta terdaftar</div><div id="participants-total" class="text-2xl font-black">—</div></div><div class="rounded-xl bg-slate-50 border p-4"><div class="text-xs text-slate-500">Sudah selesai</div><div id="participants-done" class="text-2xl font-black">—</div></div><div class="rounded-xl bg-slate-50 border p-4"><div class="text-xs text-slate-500">Belum selesai / belum mulai</div><div id="participants-pending" class="text-2xl font-black">—</div></div></div>
+        <input id="participants-search" oninput="adminRenderParticipants()" class="w-full rounded-lg border p-3" placeholder="Cari NISN, nama, atau kelas..." />
+        <div id="participants-notice" class="hidden rounded-lg border p-3 text-sm" role="status"></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">No.</th><th class="p-3">NISN</th><th class="p-3">Nama Siswa</th><th class="p-3">Kelas</th><th class="p-3">Status</th><th class="p-3">Nilai</th></tr></thead><tbody id="participants-table-body"><tr><td colspan="6" class="p-3 text-slate-500">Pilih ujian lalu klik Muat Peserta.</td></tr></tbody></table></div>
+      </div>
+      <div id="admin-panel-monitoring" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4">
+        <div><h3 class="text-xl font-extrabold">Monitoring Ujian</h3><p class="text-sm text-slate-500 mt-1">Pantau status pengerjaan dan waktu mulai/selesai yang tercatat di sistem. Ini bukan streaming real-time; klik Perbarui Monitoring untuk mengambil data terbaru.</p></div>
+        <div class="grid md:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end"><label class="text-sm font-semibold">Pilih ujian<select id="monitoring-exam-select" class="mt-1 w-full rounded-lg border p-3"><option value="">Muat daftar ujian...</option></select></label><button type="button" onclick="adminLoadMonitoring()" id="monitoring-load-btn" class="rounded-lg bg-blue-700 px-4 py-3 text-white font-bold">Perbarui Monitoring</button></div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3"><div class="rounded-xl bg-slate-50 border p-4"><div class="text-xs text-slate-500">Total peserta</div><div id="monitor-total" class="text-2xl font-black">—</div></div><div class="rounded-xl bg-emerald-50 border p-4"><div class="text-xs text-slate-500">Selesai</div><div id="monitor-done" class="text-2xl font-black">—</div></div><div class="rounded-xl bg-amber-50 border p-4"><div class="text-xs text-slate-500">Belum selesai / belum mulai</div><div id="monitor-pending" class="text-2xl font-black">—</div></div><div class="rounded-xl bg-blue-50 border p-4"><div class="text-xs text-slate-500">Sedang mengerjakan*</div><div id="monitor-active" class="text-2xl font-black">—</div></div></div>
+        <p class="text-xs text-slate-500">*Jumlah “sedang mengerjakan” dihitung dari status yang dikembalikan backend. Jika backend hanya membedakan selesai/belum mulai, jumlah ini bisa nol; jangan ditafsirkan sebagai deteksi aktivitas langsung.</p>
+        <div id="monitoring-notice" class="hidden rounded-lg border p-3 text-sm" role="status"></div>
+        <div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">No.</th><th class="p-3">Nama Siswa</th><th class="p-3">Kelas</th><th class="p-3">Status</th><th class="p-3">Mulai</th><th class="p-3">Selesai</th><th class="p-3">Nilai</th></tr></thead><tbody id="monitoring-table-body"><tr><td colspan="7" class="p-3 text-slate-500">Pilih ujian lalu klik Perbarui Monitoring.</td></tr></tbody></table></div>
+      </div>
       <div id="admin-panel-reports" class="admin-panel hidden bg-white rounded-2xl border p-5 space-y-4">
         <div><h3 class="text-xl font-extrabold">Tahap 6 — Laporan Nilai CBT Multi-Mapel</h3><p class="text-sm text-slate-500 mt-1">Laporan ini membaca hasil dari backend terpisah yang memeriksa sesi Supabase Auth administrator. Fungsi login dan pengerjaan siswa tidak diubah.</p></div>
         <div class="grid md:grid-cols-[minmax(0,1fr)_auto_auto] gap-3 items-end">
@@ -301,14 +335,13 @@ async function saveQuizResultOnline(result) {
                 </div>
                 <nav class="p-3 space-y-1" aria-label="Navigasi dashboard guru">
                     <div class="px-3 pt-2 pb-2 text-[11px] font-bold tracking-widest uppercase text-slate-500">MENU UTAMA</div>
-                    <button type="button" data-teacher-nav="peserta" onclick="showTeacherSection('peserta')" class="teacher-nav w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold text-left">
-                        <span class="text-lg">👥</span><span>Peserta Ujian</span>
+                    <button type="button" data-teacher-nav="mapel" onclick="showTeacherSection('mapel')" class="teacher-nav w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left">
+                        <span class="text-lg">📚</span><span>Mata Pelajaran & Ujian</span>
                     </button>
-                    <button type="button" data-teacher-nav="progres" onclick="showTeacherSection('progres')" class="teacher-nav w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left">
-                        <span class="text-lg">📡</span><span>Monitoring Ujian</span>
-                    </button>
+                    
+                    
                     <button type="button" data-teacher-nav="hasil" onclick="showTeacherSection('hasil')" class="teacher-nav w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left">
-                        <span class="text-lg">📊</span><span>Hasil Ujian</span>
+                        <span class="text-lg">📊</span><span>Hasil dan Laporan</span>
                     </button>
                     <button type="button" data-teacher-nav="soal" onclick="showTeacherSection('soal')" class="teacher-nav w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold text-left">
                         <span class="text-lg">📝</span><span>Tambah Soal (Word)</span>
@@ -329,12 +362,31 @@ async function saveQuizResultOnline(result) {
                     <div>
                         <div class="text-xs font-bold uppercase tracking-widest text-blue-600">Sistem Ujian Online</div>
                         <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">Dashboard Guru</h2>
-                        <p class="text-sm text-slate-500 mt-1">Kelola peserta, pantau aktivitas, dan periksa hasil ujian.</p>
+                        <p class="text-sm text-slate-500 mt-1">Periksa mata pelajaran, ujian, bank soal, serta hasil dan laporan sesuai hak akses guru.</p>
                     </div>
                     <div class="text-sm text-slate-500" id="teacher-refresh-status">Status siswa diperbarui saat dashboard dimuat.</div>
                 </header>
                 <div class="p-4 md:p-8 space-y-6">
-                    <div id="teacher-peserta-section" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6">
+                    <div id="teacher-mapel-section" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6">
+                        <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+                            <div>
+                                <h3 class="text-xl font-extrabold text-slate-900">Mata Pelajaran dan Ujian Saya</h3>
+                                <p class="text-sm text-slate-500 mt-1">Data ini mengikuti penugasan mata pelajaran dari Dashboard Administrator.</p>
+                            </div>
+                            <button type="button" onclick="loadTeacherAssignedData()" class="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold">↻ Sinkronkan Data</button>
+                        </div>
+                        <div id="teacher-assigned-notice" class="hidden rounded-xl border p-3 mb-4 text-sm" role="status"></div>
+                        <h4 class="font-bold text-slate-800 mb-2">Mata Pelajaran Ditugaskan</h4>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl mb-6">
+                            <table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">Kode</th><th class="p-3">Mata Pelajaran</th><th class="p-3">Kelas</th><th class="p-3">Fase</th><th class="p-3">Status</th></tr></thead><tbody id="teacher-assigned-subjects"><tr><td colspan="5" class="p-3 text-slate-500">Memuat penugasan...</td></tr></tbody></table>
+                        </div>
+                        <h4 class="font-bold text-slate-800 mb-2">Ujian pada Mata Pelajaran Saya</h4>
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-sm text-left"><thead class="bg-slate-100"><tr><th class="p-3">Mata Pelajaran</th><th class="p-3">Judul Ujian / Materi</th><th class="p-3">Durasi</th><th class="p-3">Nilai Tuntas</th><th class="p-3">Status</th></tr></thead><tbody id="teacher-assigned-exams"><tr><td colspan="5" class="p-3 text-slate-500">Memuat daftar ujian...</td></tr></tbody></table>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-3">Jika daftar kosong atau muncul pesan izin akses, periksa penugasan guru dan kebijakan RLS Supabase. Dashboard ini tidak mengubah data ujian administrator.</p>
+                    </div>
+                    <div id="teacher-peserta-section" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6">
                         <div class="flex flex-wrap justify-between gap-3 items-start mb-5">
                             <div><h3 class="text-xl font-extrabold text-slate-900">Manajemen Peserta Ujian</h3><p class="text-sm text-slate-500 mt-1">Impor daftar peserta dari Excel dengan kolom NIS, nama, dan kelas.</p></div>
                             <span class="rounded-full bg-blue-50 text-blue-700 text-xs font-bold px-3 py-2">DATA PESERTA</span>
@@ -1522,6 +1574,8 @@ Kunci: B</pre>
         }
 
         let adminAuthSession = null;
+        let teacherProfile = null;
+        let teacherAssignedSubjects = [];
         async function callCbtManagement(action, payload = {}) {
             if (!adminAuthSession?.access_token) throw new Error('Sesi administrator tidak ditemukan. Silakan login kembali.');
             const response = await fetch(`${SUPABASE_URL}/functions/v1/cbt-management`, {method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${adminAuthSession.access_token}`},body:JSON.stringify({action,...payload})});
@@ -1531,7 +1585,7 @@ Kunci: B</pre>
         }
         function showAdminNotice(message,ok=true){const box=document.getElementById('admin-notice');box.textContent=message;box.className=`rounded-xl border p-3 text-sm ${ok?'bg-emerald-50 border-emerald-200 text-emerald-800':'bg-red-50 border-red-200 text-red-800'}`;box.classList.remove('hidden');}
         function adminShowSection(section) {
-            const allowed = ['overview','teachers','subjects','exams','reports'];
+            const allowed = ['overview','teachers','subjects','students','exams','participants','monitoring','reports'];
             if (!allowed.includes(section)) section = 'overview';
             document.querySelectorAll('#dashboard-admin .admin-panel').forEach(panel => {
                 panel.classList.toggle('hidden', panel.id !== `admin-panel-${section}`);
@@ -1543,10 +1597,11 @@ Kunci: B</pre>
                 button.classList.toggle('text-slate-300', !active);
                 button.setAttribute('aria-current', active ? 'page' : 'false');
             });
-            const titles = {overview:'Dashboard Administrator',teachers:'Manajemen Guru',subjects:'Mata Pelajaran',exams:'Manajemen Ujian',reports:'Laporan Nilai'};
+            const titles = {overview:'Dashboard Administrator',teachers:'Manajemen Guru',subjects:'Mata Pelajaran',students:'Data Siswa',exams:'Manajemen Ujian',participants:'Peserta Ujian',monitoring:'Monitoring Ujian',reports:'Laporan Nilai'};
             const heading = document.querySelector('#dashboard-admin h2');
             if (heading) heading.textContent = titles[section] || titles.overview;
-            if (section === 'reports') { try { adminRefreshExams(); } catch (_) {} }
+            if (['reports','participants','monitoring','students'].includes(section)) { try { adminRefreshExams(); } catch (_) {} }
+            if (section === 'students') { adminRefreshStudents(); }
         }
 
         function showAdminRecoveryMessage(message, ok = false) {
@@ -1730,12 +1785,73 @@ Kunci: B</pre>
             document.getElementById('admin-subjects-table').innerHTML=subjects.length?subjects.map(m=>{const options=['<option value="">-- Belum ditugaskan --</option>',...teachers.map(t=>`<option value="${esc(t.id)}" ${m.guru_id===t.id?'selected':''}>${esc(t.nama_lengkap||t.email||t.id)}</option>`)].join('');return `<tr class="border-t"><td class="p-3"><b>${esc(m.kode||'')}</b><div>${esc(m.nama||'')}</div></td><td class="p-3">${esc(m.jenjang_kelas||'-')} / ${esc(m.fase||'-')}</td><td class="p-3">${esc(m.guru_nama||m.nama_guru||'-')}</td><td class="p-3"><select class="rounded border p-2 max-w-xs" onchange="adminAssignTeacher('${esc(m.id)}',this.value)">${options}</select></td></tr>`}).join(''):'<tr><td colspan="4" class="p-3">Belum ada mata pelajaran.</td></tr>';
             populateExamSubjects();showAdminNotice('Data guru dan mata pelajaran berhasil dimuat.');await adminRefreshExams();
           }catch(err){showAdminNotice('Gagal memuat data: '+err.message,false);}}
+        // Data siswa: CRUD melalui sesi Supabase Auth administrator. Semua operasi tunduk pada RLS.
+        let adminStudentRows = [];
+        function showStudentNotice(message,ok=true){const el=document.getElementById('admin-students-notice');if(!el)return;el.textContent=message;el.className=`rounded-lg border p-3 text-sm ${ok?'bg-emerald-50 border-emerald-200 text-emerald-800':'bg-red-50 border-red-200 text-red-800'}`;el.classList.remove('hidden');}
+        function adminResetStudentForm(){const f=document.getElementById('admin-student-form');if(f)f.reset();document.getElementById('student-edit-id').value='';document.getElementById('student-nisn').disabled=false;document.getElementById('student-save-btn').textContent='Tambah Siswa';}
+        async function adminRefreshStudents(){
+          if(!supabaseClient||!adminAuthSession){showStudentNotice('Silakan login sebagai administrator terlebih dahulu.',false);return;}
+          const tbody=document.getElementById('admin-students-table');if(tbody)tbody.innerHTML='<tr><td colspan="6" class="p-3">Memuat data siswa...</td></tr>';
+          try{const {data,error}=await supabaseClient.from('cbt_siswa').select('id,nisn,nama_lengkap,kelas,aktif,created_at,updated_at').order('kelas',{ascending:true}).order('nama_lengkap',{ascending:true});if(error)throw error;adminStudentRows=Array.isArray(data)?data:[];adminRenderStudents();showStudentNotice(`Data siswa berhasil dimuat: ${adminStudentRows.length} siswa.`);}
+          catch(err){console.error('Gagal memuat siswa',err);if(tbody)tbody.innerHTML='<tr><td colspan="6" class="p-3 text-red-700">Data siswa tidak dapat dimuat. Periksa kebijakan RLS tabel cbt_siswa dan hak akses administrator.</td></tr>';showStudentNotice('Gagal memuat data siswa: '+(err.message||String(err)),false);}
+        }
+        function adminRenderStudents(){
+          const q=String(document.getElementById('students-search')?.value||'').trim().toLowerCase();const classFilter=String(document.getElementById('students-class-filter')?.value||'');
+          const classes=[...new Set(adminStudentRows.map(s=>String(s.kelas||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}));const select=document.getElementById('students-class-filter');if(select){const old=select.value;select.innerHTML='<option value="">Semua kelas</option>'+classes.map(c=>`<option value="${escapeAdminHtml(c)}">${escapeAdminHtml(c)}</option>`).join('');if(classes.includes(old))select.value=old;}
+          const rows=adminStudentRows.filter(s=>(!classFilter||String(s.kelas||'')===classFilter)&&[s.nisn,s.nama_lengkap,s.kelas].some(v=>String(v||'').toLowerCase().includes(q)));const tbody=document.getElementById('admin-students-table');
+          document.getElementById('students-count').textContent=rows.length;document.getElementById('students-active-count').textContent=rows.filter(s=>s.aktif===true).length;document.getElementById('students-class-count').textContent=classes.length;
+          tbody.innerHTML=rows.length?rows.map((s,i)=>{const active=s.aktif===true;return `<tr class="border-t"><td class="p-3">${i+1}</td><td class="p-3 font-mono">${escapeAdminHtml(s.nisn)}</td><td class="p-3 font-semibold">${escapeAdminHtml(s.nama_lengkap)}</td><td class="p-3">${escapeAdminHtml(s.kelas||'—')}</td><td class="p-3"><span class="rounded-full px-2 py-1 ${active?'bg-emerald-100 text-emerald-800':'bg-slate-100 text-slate-600'}">${active?'Aktif':'Nonaktif'}</span></td><td class="p-3"><div class="flex flex-wrap gap-2"><button type="button" class="rounded bg-blue-100 text-blue-800 px-3 py-1 font-bold" onclick="adminEditStudent('${escapeAdminHtml(s.id)}')">Edit</button><button type="button" class="rounded px-3 py-1 font-bold ${active?'bg-red-100 text-red-700':'bg-emerald-100 text-emerald-800'}" onclick="adminSetStudentActive('${escapeAdminHtml(s.id)}',${!active})">${active?'Nonaktifkan':'Aktifkan'}</button></div></td></tr>`}).join(''):'<tr><td colspan="6" class="p-3 text-slate-500">Tidak ada siswa yang sesuai.</td></tr>';
+        }
+        async function adminSaveStudent(event){event.preventDefault();if(!adminAuthSession){showStudentNotice('Sesi administrator tidak ditemukan.',false);return;}const id=document.getElementById('student-edit-id').value;const nisn=document.getElementById('student-nisn').value.trim();const nama_lengkap=document.getElementById('student-name').value.trim();const kelas=document.getElementById('student-class').value.trim();if(!nisn||!nama_lengkap||!kelas){showStudentNotice('NISN, nama lengkap, dan kelas wajib diisi.',false);return;}const btn=document.getElementById('student-save-btn');btn.disabled=true;btn.textContent='Menyimpan...';try{if(id){const {error}=await supabaseClient.from('cbt_siswa').update({nama_lengkap,kelas,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;showStudentNotice('Data siswa berhasil diperbarui.');}else{const {error}=await supabaseClient.from('cbt_siswa').insert({nisn,nama_lengkap,kelas,aktif:true}).select('id').single();if(error)throw error;showStudentNotice('Siswa berhasil ditambahkan. PIN/kredensial login tidak diubah oleh formulir ini.');}adminResetStudentForm();await adminRefreshStudents();}catch(err){console.error(err);showStudentNotice('Gagal menyimpan siswa: '+(err.message||String(err))+(String(err.message||'').toLowerCase().includes('duplicate')?' Pastikan NISN belum terdaftar.':''),false);}finally{btn.disabled=false;btn.textContent=document.getElementById('student-edit-id').value?'Simpan Perubahan':'Tambah Siswa';}}
+        function adminEditStudent(id){const s=adminStudentRows.find(x=>String(x.id)===String(id));if(!s)return;document.getElementById('student-edit-id').value=s.id;document.getElementById('student-nisn').value=s.nisn||'';document.getElementById('student-name').value=s.nama_lengkap||'';document.getElementById('student-class').value=s.kelas||'';document.getElementById('student-nisn').disabled=true;document.getElementById('student-save-btn').textContent='Simpan Perubahan';document.getElementById('student-name').focus();}
+        async function adminSetStudentActive(id,aktif){const s=adminStudentRows.find(x=>String(x.id)===String(id));if(!s)return;if(!confirm(`${aktif?'Aktifkan':'Nonaktifkan'} akun siswa ${s.nama_lengkap} (${s.nisn})? Data pengerjaan dan nilai tidak dihapus.`))return;try{const {error}=await supabaseClient.from('cbt_siswa').update({aktif,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;showStudentNotice(`Status siswa ${s.nama_lengkap} berhasil diubah.`);await adminRefreshStudents();}catch(err){showStudentNotice('Gagal mengubah status siswa: '+(err.message||String(err)),false);}}
+        function adminDownloadStudentTemplate(){const csv='nisn,nama_lengkap,kelas\n0012345678,Contoh Nama Siswa,X.1\n';const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Template_Impor_Siswa_CBT.csv';a.click();URL.revokeObjectURL(url);}
+        function parseStudentCsvLine(line){const out=[];let v='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'&&quoted&&line[i+1]==='"'){v+='"';i++;}else if(ch==='"'){quoted=!quoted;}else if((ch===','||ch===';')&&!quoted){out.push(v.trim());v='';}else v+=ch;}out.push(v.trim());return out;}
+        async function adminImportStudentsCsv(event){const file=event.target.files?.[0];if(!file)return;try{if(!adminAuthSession)throw new Error('Silakan login sebagai administrator.');const raw=(await file.text()).replace(/^\ufeff/,'');const lines=raw.split(/\r?\n/).filter(x=>x.trim());if(lines.length<2)throw new Error('CSV harus berisi header dan minimal satu baris siswa.');const headers=parseStudentCsvLine(lines[0]).map(x=>x.toLowerCase().replace(/\s+/g,'_'));const ix={nisn:headers.indexOf('nisn'),nama:headers.indexOf('nama_lengkap')>=0?headers.indexOf('nama_lengkap'):headers.indexOf('nama'),kelas:headers.indexOf('kelas')};if(ix.nisn<0||ix.nama<0||ix.kelas<0)throw new Error('Header wajib: nisn,nama_lengkap,kelas. Unduh template untuk contoh.');const records=[];const seen=new Set();for(let i=1;i<lines.length;i++){const cols=parseStudentCsvLine(lines[i]);const row={nisn:cols[ix.nisn]||'',nama_lengkap:cols[ix.nama]||'',kelas:cols[ix.kelas]||'',aktif:true};if(!row.nisn&&!row.nama_lengkap&&!row.kelas)continue;if(!row.nisn||!row.nama_lengkap||!row.kelas)throw new Error(`Baris ${i+1}: NISN, nama, dan kelas wajib diisi.`);if(seen.has(row.nisn))throw new Error(`NISN ${row.nisn} duplikat di dalam file (baris ${i+1}).`);seen.add(row.nisn);records.push(row);}if(!records.length)throw new Error('Tidak ada baris siswa valid.');if(!confirm(`Impor ${records.length} siswa? Impor tidak menghapus atau memperbarui data yang sudah ada. Jika ada NISN duplikat di database, proses bisa ditolak oleh database.`))return;let added=0;for(let i=0;i<records.length;i+=100){const {error}=await supabaseClient.from('cbt_siswa').insert(records.slice(i,i+100));if(error)throw new Error(`Gagal menyimpan batch siswa (mulai baris data ${i+1}): ${error.message}. Periksa apakah sebagian batch sebelumnya sudah tersimpan sebelum mencoba ulang.`);added+=Math.min(100,records.length-i);}showStudentNotice(`Impor selesai: ${added} siswa ditambahkan.`);await adminRefreshStudents();}catch(err){console.error(err);showStudentNotice('Impor gagal: '+(err.message||String(err)),false);}finally{event.target.value='';}}
+
         function showExamNotice(message,ok=true){const box=document.getElementById('admin-exam-notice');box.textContent=message;box.className=`rounded-xl border p-3 text-sm ${ok?'bg-emerald-50 border-emerald-200 text-emerald-800':'bg-red-50 border-red-200 text-red-800'}`;box.classList.remove('hidden');}
         const escapeAdminHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         function populateExamSubjects(){const el=document.getElementById('new-exam-subject');if(!el)return;const old=el.value;const subjects=window.adminSubjects||[];el.innerHTML='<option value="">-- Pilih mata pelajaran --</option>'+subjects.filter(m=>m.aktif!==false).map(m=>`<option value="${escapeAdminHtml(m.id)}">${escapeAdminHtml(m.kode)} — ${escapeAdminHtml(m.nama)} (Kelas ${escapeAdminHtml(m.jenjang_kelas||'-')})</option>`).join('');if(subjects.some(m=>m.id===old))el.value=old;}
         async function adminCreateExam(event){event.preventDefault();try{if(!adminAuthSession?.user?.id)throw new Error('Sesi admin tidak ditemukan. Silakan login kembali.');const mapel_id=document.getElementById('new-exam-subject').value;if(!mapel_id)throw new Error('Pilih mata pelajaran terlebih dahulu.');const payload={mapel_id,judul:document.getElementById('new-exam-title').value.trim(),materi:document.getElementById('new-exam-topic').value.trim(),durasi_menit:Number(document.getElementById('new-exam-duration').value),nilai_tuntas:Number(document.getElementById('new-exam-pass').value),status:'draft',created_by:adminAuthSession.user.id};if(!payload.judul||!payload.materi)throw new Error('Judul dan materi wajib diisi.');if(!Number.isInteger(payload.durasi_menit)||payload.durasi_menit<1||payload.durasi_menit>300)throw new Error('Durasi harus 1 sampai 300 menit.');if(!Number.isFinite(payload.nilai_tuntas)||payload.nilai_tuntas<0||payload.nilai_tuntas>100)throw new Error('Nilai ketuntasan harus 0 sampai 100.');const {data,error}=await supabaseClient.from('cbt_ujian').insert(payload).select('id,judul').single();if(error)throw error;document.getElementById('admin-create-exam-form').reset();document.getElementById('new-exam-duration').value='60';document.getElementById('new-exam-pass').value='70';showExamNotice(`Ujian “${data.judul}” berhasil dibuat dengan status Draft.`);await adminRefreshExams();}catch(err){console.error(err);showExamNotice('Gagal membuat ujian: '+(err.message||String(err)),false);}}
         async function adminSetExamStatus(id,status){try{if(status==='terbit'&&!confirm('Pastikan bank soal ujian ini sudah lengkap. Terbitkan ujian sekarang?'))return;const {error}=await supabaseClient.from('cbt_ujian').update({status,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;showExamNotice('Status ujian berhasil diubah menjadi '+status.toUpperCase()+'.');await adminRefreshExams();}catch(err){showExamNotice('Gagal mengubah status ujian: '+(err.message||String(err)),false);}}
         async function adminRefreshExams(){try{if(!supabaseClient||!adminAuthSession)throw new Error('Silakan login sebagai administrator.');const {data,error}=await supabaseClient.from('cbt_ujian').select('id,mapel_id,judul,materi,durasi_menit,nilai_tuntas,status,created_at,cbt_mata_pelajaran(kode,nama,jenjang_kelas)').order('created_at',{ascending:false});if(error)throw error;const rows=data||[];const tbody=document.getElementById('admin-exams-table');tbody.innerHTML=rows.length?rows.map(u=>{const m=u.cbt_mata_pelajaran||{};const status=u.status||'draft';const actions=status==='draft'?`<button class="rounded bg-emerald-100 text-emerald-800 px-3 py-1 font-bold" onclick="adminSetExamStatus('${u.id}','terbit')">Terbitkan</button> <button class="rounded bg-red-100 text-red-700 px-3 py-1 font-bold" onclick="adminSetExamStatus('${u.id}','ditutup')">Tutup</button>`:status==='terbit'?`<button class="rounded bg-amber-100 text-amber-800 px-3 py-1 font-bold" onclick="adminSetExamStatus('${u.id}','ditutup')">Tutup Ujian</button> <button class="rounded bg-slate-100 text-slate-800 px-3 py-1 font-bold" onclick="adminSetExamStatus('${u.id}','draft')">Kembali ke Draft</button>`:`<button class="rounded bg-slate-100 text-slate-800 px-3 py-1 font-bold" onclick="adminSetExamStatus('${u.id}','draft')">Buka sebagai Draft</button>`;return `<tr class="border-t"><td class="p-3"><b>${escapeAdminHtml(m.kode||'-')} — ${escapeAdminHtml(m.nama||'Mata pelajaran tidak ditemukan')}</b><div class="text-slate-500">Kelas ${escapeAdminHtml(m.jenjang_kelas||'-')}</div></td><td class="p-3"><b>${escapeAdminHtml(u.judul)}</b><div class="text-slate-500">${escapeAdminHtml(u.materi)}</div><div class="text-xs text-slate-500">Tuntas: ${escapeAdminHtml(u.nilai_tuntas)} / 100</div></td><td class="p-3">${escapeAdminHtml(u.durasi_menit)} menit</td><td class="p-3"><span class="inline-block rounded-full px-3 py-1 font-bold ${status==='terbit'?'bg-emerald-100 text-emerald-800':status==='ditutup'?'bg-red-100 text-red-800':'bg-amber-100 text-amber-800'}">${escapeAdminHtml(status.toUpperCase())}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">${actions}</div></td></tr>`}).join(''):'<tr><td colspan="5" class="p-3 text-slate-500">Belum ada ujian. Buat ujian pertama melalui formulir di atas.</td></tr>';populateExamSubjects();populateReportExamSelect(rows);}catch(err){console.error(err);showExamNotice('Gagal memuat daftar ujian: '+(err.message||String(err)),false);}}
+        // Operasional peserta dan monitoring memakai endpoint laporan yang sudah ada; tidak menulis data ke database.
+        let adminParticipantRows = [];
+        let adminMonitoringRows = [];
+        function showOperationalNotice(id,message,ok=true){const el=document.getElementById(id);if(!el)return;el.textContent=message;el.className=`rounded-lg border p-3 text-sm ${ok?'bg-emerald-50 border-emerald-200 text-emerald-800':'bg-red-50 border-red-200 text-red-800'}`;el.classList.remove('hidden');}
+        async function loadOperationalRows(selectId,buttonId,noticeId,tableId,kind){
+          const examId=document.getElementById(selectId)?.value;
+          if(!examId){showOperationalNotice(noticeId,'Pilih ujian terlebih dahulu.',false);return;}
+          const btn=document.getElementById(buttonId);if(btn){btn.disabled=true;btn.textContent='Memuat...';}
+          try{
+            const d=await callCbtReports('list_exam_results',{ujian_id:examId});
+            const rows=Array.isArray(d.rows)?d.rows:[];
+            if(kind==='participants'){
+              adminParticipantRows=rows;
+              const done=rows.filter(r=>String(r.status||'').toLowerCase()==='selesai').length;
+              document.getElementById('participants-total').textContent=rows.length;
+              document.getElementById('participants-done').textContent=done;
+              document.getElementById('participants-pending').textContent=Math.max(0,rows.length-done);
+              adminRenderParticipants();
+            }else{
+              adminMonitoringRows=rows;
+              const done=rows.filter(r=>String(r.status||'').toLowerCase()==='selesai').length;
+              const active=rows.filter(r=>['sedang_mengerjakan','mengerjakan','in_progress','started'].includes(String(r.status||'').toLowerCase())).length;
+              document.getElementById('monitor-total').textContent=rows.length;
+              document.getElementById('monitor-done').textContent=done;
+              document.getElementById('monitor-pending').textContent=Math.max(0,rows.length-done-active);
+              document.getElementById('monitor-active').textContent=active;
+              adminRenderMonitoring();
+            }
+            showOperationalNotice(noticeId,`Data berhasil dimuat: ${rows.length} peserta. Diperbarui ${new Date().toLocaleString('id-ID')}.`);
+          }catch(err){console.error(err);showOperationalNotice(noticeId,'Gagal memuat data: '+(err.message||String(err)),false);document.getElementById(tableId).innerHTML=`<tr><td colspan="${kind==='participants'?6:7}" class="p-3 text-red-700">Data tidak dapat dimuat. Periksa sesi administrator dan endpoint laporan.</td></tr>`;}
+          finally{if(btn){btn.disabled=false;btn.textContent=kind==='participants'?'Muat Peserta':'Perbarui Monitoring';}}
+        }
+        function adminLoadParticipants(){return loadOperationalRows('participants-exam-select','participants-load-btn','participants-notice','participants-table-body','participants');}
+        function adminLoadMonitoring(){return loadOperationalRows('monitoring-exam-select','monitoring-load-btn','monitoring-notice','monitoring-table-body','monitoring');}
+        function adminRenderParticipants(){const body=document.getElementById('participants-table-body');if(!body)return;const q=(document.getElementById('participants-search')?.value||'').trim().toLowerCase();const rows=adminParticipantRows.filter(r=>[r.nisn,r.nama_lengkap,r.kelas].some(v=>String(v||'').toLowerCase().includes(q)));const esc=escapeAdminHtml;body.innerHTML=rows.length?rows.map((r,i)=>{const done=String(r.status||'').toLowerCase()==='selesai';return `<tr class="border-t"><td class="p-3">${i+1}</td><td class="p-3">${esc(r.nisn||'—')}</td><td class="p-3 font-semibold">${esc(r.nama_lengkap||'—')}</td><td class="p-3">${esc(r.kelas||'—')}</td><td class="p-3">${esc(done?'Selesai':r.status_label||'Belum mulai')}</td><td class="p-3">${done&&r.nilai!==null&&r.nilai!==undefined?esc(Number(r.nilai).toLocaleString('id-ID')):'—'}</td></tr>`}).join(''):'<tr><td colspan="6" class="p-3 text-slate-500">Tidak ada peserta yang cocok atau belum ada data.</td></tr>';}
+        function adminRenderMonitoring(){const body=document.getElementById('monitoring-table-body');if(!body)return;const esc=escapeAdminHtml;const fmt=v=>v?new Date(v).toLocaleString('id-ID'):'—';body.innerHTML=adminMonitoringRows.length?adminMonitoringRows.map((r,i)=>{const status=String(r.status||'').toLowerCase();const done=status==='selesai';const active=['sedang_mengerjakan','mengerjakan','in_progress','started'].includes(status);const label=done?'Selesai':active?'Sedang mengerjakan':(r.status_label||'Belum mulai');return `<tr class="border-t"><td class="p-3">${i+1}</td><td class="p-3 font-semibold">${esc(r.nama_lengkap||'—')}</td><td class="p-3">${esc(r.kelas||'—')}</td><td class="p-3"><span class="rounded-full px-2 py-1 text-xs font-bold ${done?'bg-emerald-100 text-emerald-800':active?'bg-blue-100 text-blue-800':'bg-amber-100 text-amber-800'}">${esc(label)}</span></td><td class="p-3">${fmt(r.mulai_at)}</td><td class="p-3">${fmt(r.selesai_at)}</td><td class="p-3">${done&&r.nilai!==null&&r.nilai!==undefined?esc(Number(r.nilai).toLocaleString('id-ID')):'—'}</td></tr>`}).join(''):'<tr><td colspan="7" class="p-3 text-slate-500">Belum ada data monitoring.</td></tr>';}
+
         // TAHAP 6: laporan nilai memakai Edge Function terpisah; cbt-management tetap tidak diubah.
         let adminReportRows = [];
         async function callCbtReports(action,payload={}){
@@ -1745,7 +1861,7 @@ Kunci: B</pre>
           if(!response.ok||data.ok!==true)throw new Error(data.error||`Permintaan laporan gagal (HTTP ${response.status}).`);return data;
         }
         function showReportNotice(message,ok=true){const el=document.getElementById('report-notice');if(!el)return;el.textContent=message;el.className=`rounded-lg border p-3 text-sm ${ok?'bg-emerald-50 border-emerald-200 text-emerald-800':'bg-red-50 border-red-200 text-red-800'}`;el.classList.remove('hidden');}
-        function populateReportExamSelect(rows){const el=document.getElementById('report-exam-select');if(!el)return;const old=el.value;el.innerHTML='<option value="">-- Pilih ujian --</option>'+(rows||[]).map(u=>{const m=u.cbt_mata_pelajaran||{};return `<option value="${escapeAdminHtml(u.id)}">${escapeAdminHtml(m.kode||'')} — ${escapeAdminHtml(m.nama||'')} | ${escapeAdminHtml(u.judul||'')} (${escapeAdminHtml(u.status||'')})</option>`}).join('');if((rows||[]).some(u=>u.id===old))el.value=old;}
+        function populateReportExamSelect(rows){const targets=['report-exam-select','participants-exam-select','monitoring-exam-select'];targets.forEach(id=>{const el=document.getElementById(id);if(!el)return;const old=el.value;el.innerHTML='<option value="">-- Pilih ujian --</option>'+(rows||[]).map(u=>{const m=u.cbt_mata_pelajaran||{};return `<option value="${escapeAdminHtml(u.id)}">${escapeAdminHtml(m.kode||'')} — ${escapeAdminHtml(m.nama||'')} | ${escapeAdminHtml(u.judul||'')} (${escapeAdminHtml(u.status||'')})</option>`}).join('');if((rows||[]).some(u=>u.id===old))el.value=old;});}
         async function adminLoadReport(){const examId=document.getElementById('report-exam-select')?.value;if(!examId){showReportNotice('Pilih ujian terlebih dahulu.',false);return;}const btn=document.getElementById('report-load-btn');btn.disabled=true;btn.textContent='Memuat...';try{const d=await callCbtReports('list_exam_results',{ujian_id:examId});adminReportRows=d.rows||[];document.getElementById('report-export-btn').disabled=!adminReportRows.length;const done=adminReportRows.filter(r=>r.status==='selesai');const passed=done.filter(r=>r.tuntas===true);const vals=done.map(r=>Number(r.nilai)).filter(n=>Number.isFinite(n));document.getElementById('report-total').textContent=adminReportRows.length;document.getElementById('report-done').textContent=done.length;document.getElementById('report-pass').textContent=passed.length;document.getElementById('report-average').textContent=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toLocaleString('id-ID',{maximumFractionDigits:2}):'—';adminRenderReportTable();showReportNotice(`Laporan berhasil dimuat: ${adminReportRows.length} peserta.`);}catch(err){console.error(err);showReportNotice('Gagal memuat laporan: '+err.message,false);adminReportRows=[];document.getElementById('report-export-btn').disabled=true;document.getElementById('report-table-body').innerHTML='<tr><td colspan="11" class="p-3 text-red-700">Laporan gagal dimuat.</td></tr>';}finally{btn.disabled=false;btn.textContent='Tampilkan Laporan';}}
         function adminRenderReportTable(){const body=document.getElementById('report-table-body');if(!body)return;const q=(document.getElementById('report-search')?.value||'').trim().toLowerCase();const rows=adminReportRows.filter(r=>[r.nisn,r.nama_lengkap,r.kelas].some(v=>String(v||'').toLowerCase().includes(q)));body.innerHTML=rows.length?rows.map((r,i)=>{const done=r.status==='selesai';const fmt=v=>v?new Date(v).toLocaleString('id-ID'):'—';const esc=escapeAdminHtml;return `<tr class="border-t"><td class="p-3">${i+1}</td><td class="p-3">${esc(r.nisn||'—')}</td><td class="p-3 font-semibold">${esc(r.nama_lengkap||'—')}</td><td class="p-3">${esc(r.kelas||'—')}</td><td class="p-3 font-bold">${done&&r.nilai!==null&&r.nilai!==undefined?esc(Number(r.nilai).toLocaleString('id-ID')):'—'}</td><td class="p-3">${done?`${esc(r.benar??0)} / ${esc(r.total_soal??0)}`:'—'}</td><td class="p-3">${done?'Selesai':esc(r.status_label||'Belum mulai')}</td><td class="p-3"><span class="rounded-full px-2 py-1 font-bold ${r.tuntas===true?'bg-emerald-100 text-emerald-800':done?'bg-red-100 text-red-800':'bg-slate-100 text-slate-600'}">${done?(r.tuntas?'TUNTAS':'BELUM TUNTAS'):'—'}</span></td><td class="p-3">${fmt(r.mulai_at)}</td><td class="p-3">${fmt(r.selesai_at)}</td><td class="p-3">${done?`<div class="flex gap-1"><button type="button" class="rounded bg-blue-700 px-2 py-1 text-white" onclick="adminDownloadCertificateByIndex(${adminReportRows.indexOf(r)},'png')">PNG</button><button type="button" class="rounded bg-slate-700 px-2 py-1 text-white" onclick="adminDownloadCertificateByIndex(${adminReportRows.indexOf(r)},'jpg')">JPG</button></div>`:'—'}</td></tr>`}).join(''):'<tr><td colspan="11" class="p-3 text-slate-500">Tidak ada peserta yang cocok dengan pencarian.</td></tr>';}
         // TAHAP 7: sertifikat gambar dibuat dari data hasil yang diterima dashboard.
@@ -1810,6 +1926,7 @@ Kunci: B</pre>
                     await supabaseClient.auth.signOut();
                     throw new Error('Akun ini belum terdaftar sebagai guru aktif. Hubungi administrator sekolah.');
                 }
+                teacherProfile = profile;
                 // Simpan access token sesi Auth untuk panggilan dashboard guru.
                 // Jika Edge Function cbt-admin masih hanya menerima token lama, fungsi tersebut perlu
                 // disesuaikan di sisi server agar memvalidasi JWT Supabase tanpa mengubah fungsi lain.
@@ -1821,6 +1938,7 @@ Kunci: B</pre>
                 document.getElementById('teacher-badge').classList.remove('hidden');
                 document.getElementById('teacher-badge').classList.add('flex');
                 document.getElementById('dashboard-guru').classList.remove('hidden');
+                showTeacherSection('mapel');
                 loadTeacherDashboard();
                 if (window.teacherDashboardInterval) clearInterval(window.teacherDashboardInterval);
                 window.teacherDashboardInterval = setInterval(() => { if (isTeacher) loadTeacherDashboard(); }, 20000);
@@ -1836,14 +1954,73 @@ Kunci: B</pre>
             }
         }
 
-        function handleTeacherLogout() {
+        async function handleTeacherLogout() {
             isTeacher = false;
             teacherSessionToken = null;
+            teacherProfile = null;
+            teacherAssignedSubjects = [];
+            try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (e) { console.warn('Keluar sesi guru:', e); }
             if (window.teacherDashboardInterval) { clearInterval(window.teacherDashboardInterval); window.teacherDashboardInterval = null; }
             document.getElementById('teacher-badge').classList.add('hidden');
             document.getElementById('dashboard-guru').classList.add('hidden');
             document.getElementById('kuis')?.classList.add('hidden');
             document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function showTeacherAssignedNotice(message, ok = true) {
+            const box = document.getElementById('teacher-assigned-notice');
+            if (!box) return;
+            box.textContent = message;
+            box.className = `rounded-xl border p-3 mb-4 text-sm ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`;
+            box.classList.remove('hidden');
+        }
+
+        async function loadTeacherAssignedData() {
+            const subjectsBody = document.getElementById('teacher-assigned-subjects');
+            const examsBody = document.getElementById('teacher-assigned-exams');
+            if (!subjectsBody || !examsBody) return;
+            if (!supabaseClient || !teacherProfile?.id) {
+                subjectsBody.innerHTML = '<tr><td colspan="5" class="p-3">Sesi guru belum tersedia. Silakan login ulang.</td></tr>';
+                examsBody.innerHTML = '<tr><td colspan="5" class="p-3">Sesi guru belum tersedia.</td></tr>';
+                showTeacherAssignedNotice('Sesi akun guru tidak ditemukan. Silakan keluar lalu login kembali.', false);
+                return;
+            }
+            subjectsBody.innerHTML = '<tr><td colspan="5" class="p-3 text-slate-500">Memuat penugasan...</td></tr>';
+            examsBody.innerHTML = '<tr><td colspan="5" class="p-3 text-slate-500">Memuat daftar ujian...</td></tr>';
+            try {
+                // Membaca data yang sama dengan yang dikelola administrator; tidak menulis atau mengubah tabel.
+                const { data: subjects, error: subjectError } = await supabaseClient
+                    .from('cbt_mata_pelajaran')
+                    .select('id,kode,nama,jenjang_kelas,fase,aktif,guru_id')
+                    .eq('guru_id', teacherProfile.id)
+                    .order('nama', { ascending: true });
+                if (subjectError) throw new Error('Gagal membaca penugasan mata pelajaran: ' + subjectError.message);
+                teacherAssignedSubjects = Array.isArray(subjects) ? subjects : [];
+                const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+                subjectsBody.innerHTML = teacherAssignedSubjects.length
+                    ? teacherAssignedSubjects.map(m => `<tr class="border-t"><td class="p-3 font-mono">${esc(m.kode || '-')}</td><td class="p-3 font-semibold">${esc(m.nama || '-')}</td><td class="p-3">${esc(m.jenjang_kelas || '-')}</td><td class="p-3">${esc(m.fase || '-')}</td><td class="p-3">${m.aktif === true ? '<span class="text-emerald-700 font-bold">Aktif</span>' : '<span class="text-slate-500">Nonaktif</span>'}</td></tr>`).join('')
+                    : '<tr><td colspan="5" class="p-3 text-slate-500">Belum ada mata pelajaran yang ditugaskan kepada akun ini. Minta administrator menetapkan guru pada menu Mata Pelajaran.</td></tr>';
+                const subjectIds = teacherAssignedSubjects.map(m => m.id).filter(Boolean);
+                let exams = [];
+                if (subjectIds.length) {
+                    const { data, error } = await supabaseClient
+                        .from('cbt_ujian')
+                        .select('id,mapel_id,judul,materi,durasi_menit,nilai_tuntas,status,created_at,cbt_mata_pelajaran(kode,nama,jenjang_kelas)')
+                        .in('mapel_id', subjectIds)
+                        .order('created_at', { ascending: false });
+                    if (error) throw new Error('Mata pelajaran berhasil dibaca, tetapi daftar ujian gagal dimuat: ' + error.message);
+                    exams = Array.isArray(data) ? data : [];
+                }
+                examsBody.innerHTML = exams.length
+                    ? exams.map(u => { const m = u.cbt_mata_pelajaran || {}; const status = String(u.status || 'draft').toLowerCase(); const badge = status === 'terbit' ? 'bg-emerald-100 text-emerald-800' : status === 'ditutup' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'; return `<tr class="border-t"><td class="p-3"><b>${esc(m.kode || '-')}</b><div>${esc(m.nama || '-')}</div><div class="text-xs text-slate-500">Kelas ${esc(m.jenjang_kelas || '-')}</div></td><td class="p-3"><b>${esc(u.judul || '-')}</b><div class="text-slate-500">${esc(u.materi || '-')}</div></td><td class="p-3">${esc(u.durasi_menit ?? '-')} menit</td><td class="p-3">${esc(u.nilai_tuntas ?? '-')} / 100</td><td class="p-3"><span class="rounded-full px-3 py-1 text-xs font-bold ${badge}">${esc(status.toUpperCase())}</span></td></tr>`; }).join('')
+                    : '<tr><td colspan="5" class="p-3 text-slate-500">Belum ada ujian untuk mata pelajaran yang ditugaskan.</td></tr>';
+                showTeacherAssignedNotice(`Sinkronisasi selesai: ${teacherAssignedSubjects.length} mata pelajaran dan ${exams.length} ujian ditemukan.`, true);
+            } catch (err) {
+                console.error('Sinkronisasi dashboard guru gagal:', err);
+                subjectsBody.innerHTML = '<tr><td colspan="5" class="p-3 text-amber-800">Data mata pelajaran belum dapat dibaca.</td></tr>';
+                examsBody.innerHTML = '<tr><td colspan="5" class="p-3 text-amber-800">Data ujian belum dapat dibaca.</td></tr>';
+                showTeacherAssignedNotice((err?.message || String(err)) + ' Pastikan sesi login dan izin baca Supabase mengizinkan guru melihat data yang ditugaskan.', false);
+            }
         }
 
         function loadSavedStudents() {
@@ -1858,7 +2035,7 @@ Kunci: B</pre>
             catch (e) { alert('Daftar peserta tidak dapat disimpan pada browser ini.'); }
         }
         function showTeacherSection(section) {
-            ['peserta','progres','hasil','soal'].forEach(k => {
+            ['mapel','hasil','soal'].forEach(k => {
                 const el = document.getElementById('teacher-' + k + '-section');
                 if (el) el.classList.toggle('hidden', k !== section);
             });
@@ -1870,7 +2047,7 @@ Kunci: B</pre>
                 if (active) btn.classList.remove('hover:bg-slate-800');
                 else btn.classList.add('hover:bg-slate-800');
             });
-            if (section === 'peserta') renderParticipantsTable();
+            if (section === 'mapel') loadTeacherAssignedData();
             if (section === 'soal') {
                 updateQuestionCounts();
                 loadExtraQuestionsFromSupabase(true).then(status => {
@@ -2117,6 +2294,7 @@ Kunci: B</pre>
             if (status) status.textContent = 'Sedang mengambil data terbaru dari Supabase...';
             try {
                 await loadTeacherDashboard();
+                await loadTeacherAssignedData();
                 if (status && !status.textContent.startsWith('Gagal memuat progres')) {
                     status.textContent = 'Data diperbarui pada ' + new Date().toLocaleTimeString('id-ID');
                 }
