@@ -140,17 +140,17 @@ async function saveQuizResultOnline(result) {
             <!-- FORM LOGIN GURU -->
             <form id="teacher-login-form" onsubmit="handleTeacherLogin(event)" class="hidden space-y-4">
                 <div>
+                    <label for="teacher-email-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Username / Email Guru</label>
+                    <input type="email" id="teacher-email-input" autocomplete="username" placeholder="Masukkan email akun guru" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-slate-900 font-semibold outline-none">
+                </div>
+                <div>
                     <label for="teacher-password-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Kata Sandi Guru</label>
-                    <input type="password" id="teacher-password-input" placeholder="Masukkan kata sandi" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-slate-900 font-semibold outline-none">
+                    <input type="password" id="teacher-password-input" autocomplete="current-password" placeholder="Masukkan kata sandi" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 text-slate-900 font-semibold outline-none">
                 </div>
-
-                <div id="teacher-login-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-medium">
-                    ❌ Kata sandi guru salah.
-                </div>
-
-                <button type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold rounded-xl shadow-lg">
-                    Masuk sebagai Guru &rarr;
-                </button>
+                <div id="teacher-login-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm" role="status"></div>
+                <button id="teacher-login-submit" type="submit" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold rounded-xl shadow-lg">Masuk sebagai Guru &rarr;</button>
+                <button id="teacher-forgot-password-btn" type="button" onclick="requestTeacherPasswordReset()" class="w-full text-sm font-semibold text-blue-700 hover:underline">Lupa password guru? Kirim tautan reset</button>
+                <p class="text-xs text-slate-500">Gunakan email guru yang didaftarkan administrator. Tautan reset akan dikirim ke email tersebut.</p>
             </form>
             <!-- Login administrator memakai Supabase Auth; form guru lama tetap dipertahankan -->
             <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="hidden space-y-4">
@@ -158,8 +158,21 @@ async function saveQuizResultOnline(result) {
                 <div><label for="admin-password-input" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Kata Sandi</label><input type="password" id="admin-password-input" autocomplete="current-password" placeholder="Kata sandi administrator" required class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 font-semibold outline-none"></div>
                 <div id="admin-login-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"></div>
                 <button id="admin-login-submit" type="submit" class="w-full py-3.5 px-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg">Masuk Dashboard Administrator →</button>
-                <p class="text-xs text-slate-500">Login admin menggunakan Supabase Auth. Login Guru lama tetap menggunakan cbt-admin.</p>
+                <button id="admin-forgot-password-btn" type="button" onclick="requestAdminPasswordReset()" class="w-full text-sm font-semibold text-blue-700 hover:underline">Lupa password? Kirim tautan reset</button>
+                <p class="text-xs text-slate-500">Gunakan email dan kata sandi akun administrator.</p>
             </form>
+            <!-- Panel reset password administrator: ditampilkan setelah sesi recovery Supabase terverifikasi -->
+            <section id="admin-recovery-panel" class="hidden space-y-4" aria-live="polite">
+                <h3 class="text-lg font-bold text-slate-900">Buat Password Baru</h3>
+                <p class="text-sm text-slate-600">Masukkan password baru dan ulangi untuk konfirmasi.</p>
+                <form id="admin-recovery-form" onsubmit="saveAdminNewPassword(event)" class="space-y-3">
+                    <div><label for="admin-new-password" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Baru</label><input id="admin-new-password" type="password" minlength="8" autocomplete="new-password" required placeholder="Minimal 8 karakter" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 font-semibold outline-none"></div>
+                    <div><label for="admin-confirm-password" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Konfirmasi Password Baru</label><input id="admin-confirm-password" type="password" minlength="8" autocomplete="new-password" required placeholder="Ulangi password baru" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-slate-900 font-semibold outline-none"></div>
+                    <div id="admin-recovery-message" class="hidden p-3 rounded-xl border text-sm" role="status"></div>
+                    <button id="admin-recovery-submit" type="submit" class="w-full py-3.5 px-4 bg-emerald-700 text-white font-bold rounded-xl shadow-lg">Simpan Password Baru</button>
+                </form>
+                <button type="button" onclick="cancelAdminRecovery()" class="w-full text-sm font-semibold text-slate-600 hover:underline">Kembali ke login</button>
+            </section>
         </div>
     </div>
 
@@ -1554,6 +1567,163 @@ Kunci: B</pre>
             if (section === 'reports') { try { adminRefreshExams(); } catch (_) {} }
         }
 
+        function showAdminRecoveryMessage(message, ok = false) {
+            const box = document.getElementById('admin-recovery-message');
+            if (!box) return;
+            box.textContent = message;
+            box.className = `p-3 rounded-xl border text-sm ${ok ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+            box.classList.remove('hidden');
+        }
+
+        function showAdminRecoveryPanel() {
+            const roles = document.querySelector('.grid.grid-cols-3.gap-2.bg-slate-100');
+            if (roles) roles.classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('teacher-login-form').classList.add('hidden');
+            document.getElementById('admin-login-form').classList.add('hidden');
+            document.getElementById('admin-recovery-panel').classList.remove('hidden');
+            const heading = document.querySelector('#login-modal h2');
+            if (heading) heading.textContent = 'Reset Password Akun';
+        }
+
+        function cancelAdminRecovery() {
+            document.getElementById('admin-recovery-panel').classList.add('hidden');
+            const roles = document.querySelector('.grid.grid-cols-3.gap-2.bg-slate-100');
+            if (roles) roles.classList.remove('hidden');
+            const heading = document.querySelector('#login-modal h2');
+            if (heading) heading.textContent = 'Masuk Ulangan Harian PKWU';
+            switchLoginTab('admin');
+            const recoveryMessage = document.getElementById('admin-recovery-message');
+            if (recoveryMessage) recoveryMessage.classList.add('hidden');
+            const loginError = document.getElementById('admin-login-error');
+            if (loginError) loginError.classList.add('hidden');
+            // Buang token/error dari URL agar tidak dipakai ulang.
+            try { history.replaceState(null, document.title, window.location.pathname + window.location.search); } catch (_) {}
+        }
+
+        async function requestTeacherPasswordReset() {
+            const email = document.getElementById('teacher-email-input').value.trim();
+            const errBox = document.getElementById('teacher-login-error');
+            errBox.className = 'p-3 rounded-xl border text-sm';
+            errBox.classList.add('hidden');
+            if (!email) {
+                errBox.textContent = 'Masukkan email guru terlebih dahulu, lalu klik Lupa password guru.';
+                errBox.classList.add('bg-red-50','border-red-200','text-red-700');
+                errBox.classList.remove('hidden');
+                document.getElementById('teacher-email-input').focus();
+                return;
+            }
+            const button = document.getElementById('teacher-forgot-password-btn');
+            button.disabled = true;
+            button.textContent = 'Mengirim tautan reset...';
+            try {
+                if (!supabaseClient) throw new Error('Konfigurasi Supabase belum tersedia.');
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: 'https://adam945.github.io/admin/' });
+                if (error) throw error;
+                errBox.textContent = 'Permintaan reset diproses. Jika email terdaftar, tautan reset akan dikirim. Buka email terbaru dan gunakan tautan satu kali saja.';
+                errBox.className = 'p-3 rounded-xl border text-sm bg-emerald-50 border-emerald-200 text-emerald-800';
+                errBox.classList.remove('hidden');
+            } catch (err) {
+                errBox.textContent = 'Gagal meminta reset password guru: ' + (err.message || String(err));
+                errBox.className = 'p-3 rounded-xl border text-sm bg-red-50 border-red-200 text-red-700';
+                errBox.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Lupa password guru? Kirim tautan reset';
+            }
+        }
+
+        async function requestAdminPasswordReset() {
+            const email = document.getElementById('admin-email-input').value.trim();
+            const errBox = document.getElementById('admin-login-error');
+            errBox.classList.add('hidden');
+            if (!email) {
+                errBox.textContent = 'Masukkan email administrator terlebih dahulu, kemudian klik Lupa password.';
+                errBox.classList.remove('hidden');
+                document.getElementById('admin-email-input').focus();
+                return;
+            }
+            const button = document.getElementById('admin-forgot-password-btn');
+            button.disabled = true;
+            button.textContent = 'Mengirim tautan...';
+            try {
+                if (!supabaseClient) throw new Error('Konfigurasi Supabase belum tersedia.');
+                const redirectTo = 'https://adam945.github.io/admin/';
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+                if (error) throw error;
+                errBox.textContent = 'Jika email terdaftar, tautan reset telah diminta. Buka email terbaru dan gunakan tautannya satu kali saja.';
+                errBox.className = 'p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm';
+                errBox.classList.remove('hidden');
+            } catch (err) {
+                errBox.textContent = 'Gagal meminta reset password: ' + (err.message || String(err));
+                errBox.className = 'p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm';
+                errBox.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Lupa password? Kirim tautan reset';
+            }
+        }
+
+        async function saveAdminNewPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('admin-new-password').value;
+            const confirmation = document.getElementById('admin-confirm-password').value;
+            const submit = document.getElementById('admin-recovery-submit');
+            if (password.length < 8) {
+                showAdminRecoveryMessage('Password harus minimal 8 karakter.');
+                return;
+            }
+            if (password !== confirmation) {
+                showAdminRecoveryMessage('Konfirmasi password tidak sama. Periksa kedua kolom.');
+                return;
+            }
+            submit.disabled = true;
+            submit.textContent = 'Menyimpan...';
+            try {
+                if (!supabaseClient) throw new Error('Konfigurasi Supabase belum tersedia.');
+                const { data, error } = await supabaseClient.auth.updateUser({ password });
+                if (error) throw error;
+                if (!data || !data.user) throw new Error('Supabase tidak mengonfirmasi perubahan password.');
+                showAdminRecoveryMessage('Password berhasil diubah. Silakan kembali ke login dan masuk menggunakan password baru.', true);
+                document.getElementById('admin-recovery-form').reset();
+                // Jangan otomatis masuk ke dashboard; minta login ulang dengan password baru.
+                await supabaseClient.auth.signOut();
+                adminAuthSession = null;
+                setTimeout(() => cancelAdminRecovery(), 1800);
+            } catch (err) {
+                showAdminRecoveryMessage('Password belum berhasil diubah: ' + (err.message || String(err)));
+            } finally {
+                submit.disabled = false;
+                submit.textContent = 'Simpan Password Baru';
+            }
+        }
+
+        function initAdminPasswordRecovery() {
+            if (!supabaseClient) return;
+            // Event ini hanya dipancarkan ketika Supabase berhasil memverifikasi sesi recovery.
+            supabaseClient.auth.onAuthStateChange((event) => {
+                if (event === 'PASSWORD_RECOVERY') showAdminRecoveryPanel();
+            });
+            // Jika tautan ditolak, jelaskan masalahnya dan jangan menampilkan form seolah-olah terverifikasi.
+            const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+            const errorCode = hash.get('error_code');
+            // Beberapa alur PKCE memproses URL sebelum listener terpasang; cek sesi yang sudah terbentuk.
+            if (hash.get('type') === 'recovery' || new URLSearchParams(window.location.search).has('code')) {
+                supabaseClient.auth.getSession().then(({ data, error }) => {
+                    if (!error && data && data.session) showAdminRecoveryPanel();
+                }).catch(() => {});
+            }
+            if (errorCode === 'otp_expired' || hash.get('error') === 'access_denied') {
+                document.getElementById('login-modal').classList.remove('hidden');
+                switchLoginTab('admin');
+                const errBox = document.getElementById('admin-login-error');
+                errBox.textContent = 'Tautan reset tidak valid atau sudah kedaluwarsa. Kembali ke tab akun yang sesuai, masukkan email, lalu minta tautan reset yang baru.';
+                errBox.className = 'p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm';
+                errBox.classList.remove('hidden');
+            }
+        }
+
         async function handleAdminLogin(event){
             event.preventDefault(); const errBox=document.getElementById('admin-login-error'),submit=document.getElementById('admin-login-submit');errBox.classList.add('hidden');submit.disabled=true;submit.textContent='Memeriksa akun...';
             try{
@@ -1637,33 +1807,50 @@ Kunci: B</pre>
 
         async function handleTeacherLogin(event) {
             event.preventDefault();
+            const emailInput = document.getElementById('teacher-email-input');
             const passwordInput = document.getElementById('teacher-password-input');
             const errorBox = document.getElementById('teacher-login-error');
-            const submitButton = document.querySelector('#teacher-login-form button[type="submit"]');
+            const submitButton = document.getElementById('teacher-login-submit');
+            errorBox.className = 'hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm';
             errorBox.classList.add('hidden');
-            if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Memeriksa...'; }
+            if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Memeriksa akun...'; }
             try {
-                const result = await callCbtAdmin('login', { password: passwordInput.value });
-                teacherSessionToken = result.token;
+                if (!supabaseClient) throw new Error('Konfigurasi Supabase belum tersedia.');
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: emailInput.value.trim(), password: passwordInput.value
+                });
+                if (error) throw error;
+                if (!data.session || !data.user) throw new Error('Supabase tidak mengembalikan sesi login.');
+                const { data: profile, error: profileError } = await supabaseClient
+                    .from('cbt_profiles').select('id,nama_lengkap,role,aktif').eq('id', data.user.id).maybeSingle();
+                if (profileError) throw new Error('Gagal memeriksa profil guru: ' + profileError.message);
+                if (!profile || profile.role !== 'guru' || profile.aktif !== true) {
+                    await supabaseClient.auth.signOut();
+                    throw new Error('Akun ini belum terdaftar sebagai guru aktif. Hubungi administrator sekolah.');
+                }
+                // Simpan access token sesi Auth untuk panggilan dashboard guru.
+                // Jika Edge Function cbt-admin masih hanya menerima token lama, fungsi tersebut perlu
+                // disesuaikan di sisi server agar memvalidasi JWT Supabase tanpa mengubah fungsi lain.
+                teacherSessionToken = data.session.access_token;
                 isTeacher = true;
                 passwordInput.value = '';
                 document.getElementById('login-modal').classList.add('hidden');
-                // Sembunyikan seluruh area soal siswa saat mode guru aktif.
                 document.getElementById('kuis')?.classList.add('hidden');
                 document.getElementById('teacher-badge').classList.remove('hidden');
                 document.getElementById('teacher-badge').classList.add('flex');
                 document.getElementById('dashboard-guru').classList.remove('hidden');
                 loadTeacherDashboard();
                 if (window.teacherDashboardInterval) clearInterval(window.teacherDashboardInterval);
-                window.teacherDashboardInterval = setInterval(() => {
-                    if (isTeacher) loadTeacherDashboard();
-                }, 20000);
+                window.teacherDashboardInterval = setInterval(() => { if (isTeacher) loadTeacherDashboard(); }, 20000);
             } catch (err) {
                 console.error('Login guru gagal:', err);
-                errorBox.textContent = '❌ ' + (err.message || 'Login gagal. Periksa koneksi dan konfigurasi Edge Function.');
+                errorBox.textContent = 'Login guru gagal: ' + (err.message || 'Periksa email, kata sandi, dan koneksi.');
                 errorBox.classList.remove('hidden');
+                try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
+                teacherSessionToken = null;
+                isTeacher = false;
             } finally {
-                if (submitButton) { submitButton.disabled = false; submitButton.innerHTML = 'Masuk sebagai Guru &rarr;'; }
+                if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Masuk sebagai Guru →'; }
             }
         }
 
@@ -2039,6 +2226,7 @@ Kunci: B</pre>
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            initAdminPasswordRecovery();
             setupSecurityGuards();
             updateQuestionCounts();
             initQuiz();
